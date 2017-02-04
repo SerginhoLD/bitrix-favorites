@@ -14,9 +14,6 @@
       "homepage": "http://serginhold.ru"
     }
   ],
-  "extra": {
-    "installer-name": "serginhold.favorites"
-  },
   "require": {
     "php": ">=5.5.0",
     "composer/installers": "~1"

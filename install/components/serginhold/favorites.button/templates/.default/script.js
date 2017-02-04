@@ -1,18 +1,22 @@
-$(function() {
-    $(document).on('click', '.js-addToFavorites', function(e) {
+;$(function() {
+    'use strict';
+    
+    $(document).on('click', '.js-add-to-favorites', function(e) {
         var $btn = $(this),
             id = $btn.data('id'),
             type = $btn.data('type'),
             url = $btn.data('url'),
             actionAdd = $btn.data('action-add'),
             actionDelete = $btn.data('action-delete'),
-            isActive = $btn.hasClass('active'),
+            titleAdd = $btn.data('title-add'),
+            titleDelete = $btn.data('title-delete'),
+            isActive = $btn.hasClass('btn-success'),
             ajaxAction = !isActive ? actionAdd : actionDelete;
         
         e.preventDefault();
         
         $btn.prop('disabled', true);
-    
+        
         $.ajax({
             url: url,
             type: 'POST',
@@ -26,9 +30,9 @@ $(function() {
         }).done(function(result) {
             if (result.success) {
                 if (result.action === actionAdd)
-                    $btn.addClass('active');
+                    $btn.removeClass('btn-default').addClass('btn-success').text(titleDelete);
                 else
-                    $btn.removeClass('active');
+                    $btn.removeClass('btn-success').addClass('btn-default').text(titleAdd);
                 
                 $btn.prop('disabled', false);
             }
@@ -36,8 +40,8 @@ $(function() {
                 console.log(result.errors);
             }
             
-        }).error(function (e1, e2, e3) {
-            console.log(e1, e2, e3);
+        }).error(function (jqXHR, textStatus, errorThrown) {
+            console.log(textStatus, errorThrown);
         });
     });
 });

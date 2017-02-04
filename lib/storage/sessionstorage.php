@@ -8,7 +8,7 @@ use SerginhoLD\Favorites\FavoritesTable;
 
 /**
  * Class SessionStorage
- * @package Bella\Favorites\Storage
+ * @package SerginhoLD\Favorites\Storage
  */
 class SessionStorage extends AbstractStorage
 {
@@ -17,7 +17,7 @@ class SessionStorage extends AbstractStorage
      * @param null $userID
      * @param string $type
      */
-    public function __construct($userID = null, $type = FavoritesTable::ENTITY_TYPE_IBLOCK_ELEMENT)
+    public function __construct($userID = null, $type = FavoritesTable::TYPE_IBLOCK_ELEMENT)
     {
         parent::__construct($userID, $type);
         
@@ -29,7 +29,7 @@ class SessionStorage extends AbstractStorage
      * Возвращает массив избранных элементов текущей сессии
      * @return array
      */
-    protected function & getStorage()
+    protected function & getStorageList()
     {
         $key = FavoritesTable::getTableName();
         $type = $this->getType();
@@ -53,7 +53,7 @@ class SessionStorage extends AbstractStorage
         
         if ($oResult->isSuccess())
         {
-            $arStorage = $this->getStorage();
+            $arStorage = $this->getStorageList();
             
             if (!in_array($id, $arStorage, true))
                 $oResult->addError(new Error(Loc::getMessage('FAVORITES_MODULE_STORAGE_ERROR_ITEM_NOT_IN_STORAGE')));
@@ -77,7 +77,7 @@ class SessionStorage extends AbstractStorage
         }
         else
         {
-            $arStorage = & $this->getStorage();
+            $arStorage = & $this->getStorageList();
             $arStorage[] = $id;
         }
         
@@ -94,7 +94,7 @@ class SessionStorage extends AbstractStorage
         
         if ($oResult->isSuccess())
         {
-            $arStorage = & $this->getStorage();
+            $arStorage = & $this->getStorageList();
             unset($arStorage[array_search($id, $arStorage, true)]);
         }
         
@@ -106,7 +106,7 @@ class SessionStorage extends AbstractStorage
      */
     public function getList(array $arParams = [])
     {
-        $arStorage = $this->getStorage();
+        $arStorage = $this->getStorageList();
         
         if (!empty($arParams))
         {
@@ -117,5 +117,34 @@ class SessionStorage extends AbstractStorage
         }
         
         return $arStorage;
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function getAll()
+    {
+        $arResult = (array)$_SESSION[FavoritesTable::getTableName()];
+        
+        foreach ($arResult as $k => $arItem)
+        {
+            if (!is_array($arItem) || empty($arItem))
+                unset($arResult[$k]);
+        }
+        
+        return $arResult;
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function clearAll()
+    {
+        $key = FavoritesTable::getTableName();
+        
+        if (!empty($_SESSION[$key]))
+            unset($_SESSION[$key]);
+        
+        return $this;
     }
 }

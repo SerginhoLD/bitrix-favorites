@@ -11,7 +11,11 @@ $arComponentDescription = [
     'SORT' => 100,
     'CACHE_PATH' => 'Y',
     'PATH' => [
-        'ID' => 'serginhold.favorites',
-        'NAME' => Loc::getMessage('FAVORITES_MODULE_NAME'),
+        'ID' => 'serginhold',
+        'NAME' => '//github.com/SerginhoLD',
+        'CHILD' => [
+            'ID' => 'serginhold.favorites',
+            'NAME' => Loc::getMessage('FAVORITES_MODULE_NAME'),
+        ],
     ],
 ];

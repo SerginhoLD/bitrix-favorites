@@ -19,7 +19,7 @@ class DatabaseStorage extends AbstractStorage
      * @param null $userID
      * @param string $type
      */
-    public function __construct($userID = null, $type = FavoritesTable::ENTITY_TYPE_IBLOCK_ELEMENT)
+    public function __construct($userID = null, $type = FavoritesTable::TYPE_IBLOCK_ELEMENT)
     {
         parent::__construct($userID, $type);
     }
@@ -113,12 +113,15 @@ class DatabaseStorage extends AbstractStorage
         if ($oResult->isSuccess())
         {
             $oConnection = Application::getInstance()->getConnection(FavoritesTable::getConnectionName());
-            $oHelper = $oConnection->getSqlHelper();
+            $oSqlHelper = $oConnection->getSqlHelper();
             
             $table = FavoritesTable::getTableName();
-            $type = $oHelper->forSql($this->getType());
             
-            $sql = sprintf("DELETE FROM `%s` WHERE `USER_ID` = %u AND `ENTITY_TYPE` = '%s' AND `ENTITY_ID` = %u", $table, $this->getUser(), $type, $id);
+            $sql = sprintf("DELETE FROM %s WHERE %s = %u AND %s = '%s' AND %s = %u",
+                $oSqlHelper->quote($table),
+                $oSqlHelper->quote('USER_ID'), $this->getUser(),
+                $oSqlHelper->quote('ENTITY_TYPE'), $oSqlHelper->forSql($this->getType()),
+                $oSqlHelper->quote('ENTITY_ID'), $id);
             
             /** @var \Bitrix\Main\DB\Result $oDeleteResult */
             $oDeleteResult = $oConnection->query($sql);
@@ -139,5 +142,44 @@ class DatabaseStorage extends AbstractStorage
         $arParams['filter']['=ENTITY_TYPE'] = $this->getType();
         
         return array_column(FavoritesTable::getList($arParams)->fetchAll(), 'ENTITY_ID');
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function getAll()
+    {
+        $arResult = [];
+        
+        $arFavorites = FavoritesTable::getList([
+            'filter' => [
+                '=USER_ID' => $this->getUser(),
+            ],
+        ])->fetchAll();
+        
+        foreach ($arFavorites as $arItem)
+        {
+            $arResult[$arItem['ENTITY_TYPE']][] = $arItem['ENTITY_ID'];
+        }
+        
+        return $arResult;
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function clearAll()
+    {
+        $oConnection = Application::getInstance()->getConnection(FavoritesTable::getConnectionName());
+        $oSqlHelper = $oConnection->getSqlHelper();
+        
+        $table = FavoritesTable::getTableName();
+        
+        $sql = sprintf("DELETE FROM %s WHERE %s = %u", $oSqlHelper->quote($table), $oSqlHelper->quote('USER_ID'), $this->getUser());
+        
+        /** @var \Bitrix\Main\DB\Result $oDeleteResult */
+        $oDeleteResult = $oConnection->query($sql);
+        
+        return $this;
     }
 }

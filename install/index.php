@@ -4,10 +4,10 @@ defined('B_PROLOG_INCLUDED') and (B_PROLOG_INCLUDED === true) or die();
 use Bitrix\Main\Application;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\ModuleManager;
+use Bitrix\Main\EventManager;
+use Bitrix\Main\IO\Directory;
 use Bitrix\Main\IO\FileNotFoundException;
 use SerginhoLD\Favorites\FavoritesTable;
-
-// TODO: в разработке
 
 Loc::loadMessages(__FILE__);
 
@@ -29,7 +29,7 @@ class serginhold_favorites extends \CModule
     public $PARTNER_URI = 'https://github.com/SerginhoLD';
     
     /**
-     * bella_favorites constructor.
+     * serginhold_favorites constructor.
      */
     function __construct()
     {
@@ -50,10 +50,11 @@ class serginhold_favorites extends \CModule
     public function DoInstall()
     {
         $this->InstallDB();
-        
-        // TODO: CopyDirFiles
+        $this->InstallFiles();
         
         ModuleManager::registerModule($this->MODULE_ID);
+        
+        $this->InstallEvents();
     }
     
     /**
@@ -61,6 +62,8 @@ class serginhold_favorites extends \CModule
      */
     public function DoUninstall()
     {
+        $this->UnInstallFiles();
+        $this->UnInstallEvents();
         $this->UnInstallDB();
         
         ModuleManager::unRegisterModule($this->MODULE_ID);
@@ -76,8 +79,6 @@ class serginhold_favorites extends \CModule
         $oConnection = Application::getInstance()->getConnection();
         
         $sqlFile = __DIR__ . '/db/' . $oConnection->getType() . '/' . $filename;
-        //var_dump($sqlFile); var_dump(file_get_contents($sqlFile)); exit;
-        
         
         if (!is_file($sqlFile))
         {
@@ -96,11 +97,79 @@ class serginhold_favorites extends \CModule
     }
     
     /**
-     * Удаление таблиц в базе данных
+     * Удаление таблиц из базы данных
      */
     public function UnInstallDB()
     {
         $this->executeSqlFile('uninstall.sql');
+    }
+    
+    /**
+     * @return string
+     */
+    private function getBxDir()
+    {
+        $modulePath = str_replace([DIRECTORY_SEPARATOR, Application::getDocumentRoot()], ['/', null], __FILE__);
+        
+        if (mb_strpos($modulePath, '/local/') === 0)
+            return 'local';
+        
+        return 'bitrix';
+    }
+    
+    /**
+     * Копирует файлы
+     */
+    public function InstallFiles()
+    {
+        CopyDirFiles(
+            __DIR__ . '/components',
+            Application::getDocumentRoot() . '/' . $this->getBxDir() . '/components',
+            true, true
+        );
+    }
+    
+    /**
+     * Удаляет файлы
+     */
+    public function UnInstallFiles()
+    {
+        $oComponentsDir = new Directory(__DIR__ . '/components/serginhold');
+        $arChildrenDir = $oComponentsDir->getChildren();
+        $localComponentsDir = Application::getDocumentRoot() . '/' . $this->getBxDir() . '/components/serginhold';
+        
+        foreach ($arChildrenDir as $oDir)
+        {
+            if ($oDir->isDirectory())
+            {
+                $localDir = $localComponentsDir . '/' . $oDir->getName();
+                
+                if (is_dir($localDir))
+                    Directory::deleteDirectory($localDir);
+            }
+        }
+    }
+    
+    /**
+     * Регистрация событий
+     */
+    public function InstallEvents()
+    {
+        $oEventManager = EventManager::getInstance();
+        
+        $oEventManager->registerEventHandler('main', 'OnAfterUserLogin',
+            $this->MODULE_ID, FavoritesTable::class, 'OnAfterUserLoginEvent');
+    }
+    
+    /**
+     * Удаление событий
+     */
+    public function UnInstallEvents()
+    {
+        $oEventManager = EventManager::getInstance();
+        
+        $oEventManager->unRegisterEventHandler('main', 'OnAfterUserLogin',
+            $this->MODULE_ID, FavoritesTable::class, 'OnAfterUserLoginEvent');
     }
 }
 

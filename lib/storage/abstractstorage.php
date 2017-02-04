@@ -4,9 +4,7 @@ namespace SerginhoLD\Favorites\Storage;
 defined('B_PROLOG_INCLUDED') and (B_PROLOG_INCLUDED === true) or die();
 
 use Bitrix\Main\Result;
-use Bitrix\Main\Error;
 use Bitrix\Main\Localization\Loc;
-use Bitrix\Iblock\ElementTable;
 use SerginhoLD\Favorites\FavoritesTable;
 
 Loc::loadMessages(__FILE__);
@@ -32,7 +30,7 @@ abstract class AbstractStorage
      * @param int|null $userID ID пользователя
      * @param string $type Тип избранного
      */
-    public function __construct($userID = null, $type = FavoritesTable::ENTITY_TYPE_IBLOCK_ELEMENT)
+    public function __construct($userID = null, $type = FavoritesTable::TYPE_IBLOCK_ELEMENT)
     {
         $this->setUser($userID)->setType($type);
     }
@@ -60,12 +58,12 @@ abstract class AbstractStorage
      * @param string $type Тип избранного
      * @return $this
      */
-    public function setType($type = FavoritesTable::ENTITY_TYPE_IBLOCK_ELEMENT)
+    public function setType($type = FavoritesTable::TYPE_IBLOCK_ELEMENT)
     {
         $type = trim((string)$type);
         
         if (!mb_strlen($type))
-            $type = FavoritesTable::ENTITY_TYPE_IBLOCK_ELEMENT;
+            $type = FavoritesTable::TYPE_IBLOCK_ELEMENT;
         
         $this->type = $type;
         
@@ -106,26 +104,14 @@ abstract class AbstractStorage
     abstract public function getList(array $arParams = []);
     
     /**
-     * Проверка на существование элемента ифноблока
-     * @param int $id ID элемента
-     * @param array $arParams
-     * @return bool
+     * Возвращает все избранные элементы независимо от типа
+     * @return array
      */
-    public static function issetIblockElement($id, $arParams = [])
-    {
-        $id = (int)$id;
-        
-        if ($id > 0)
-        {
-            $arElement = ElementTable::getList([
-                'filter' => [
-                    '=ID' => $id,
-                ]
-            ])->fetch();
-            
-            return $arElement !== false;
-        }
-        
-        return false;
-    }
+    abstract public function getAll();
+    
+    /**
+     * Очищает таблицу избранных элементов
+     * @return $this
+     */
+    abstract public function clearAll();
 }

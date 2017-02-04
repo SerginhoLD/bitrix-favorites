@@ -1,0 +1,24 @@
+{
+  "name": "serginhold/bitrix-favorites",
+  "description": "Favorites (Bitrix)",
+  "keywords": ["favorites", "bitrix"],
+  "type": "bitrix-d7-module",
+  "license": "MIT",
+  "support": {
+    "issues": "https://github.com/SerginhoLD/bitrix-favorites/issues",
+    "source": "https://github.com/SerginhoLD/bitrix-favorites"
+  },
+  "authors": [
+    {
+      "name": "Sergey Zubrilin",
+      "homepage": "http://serginhold.ru"
+    }
+  ],
+  "extra": {
+    "installer-name": "serginhold.favorites"
+  },
+  "require": {
+    "php": ">=5.5.0",
+    "composer/installers": "~1"
+  }
+}

@@ -85,13 +85,13 @@ abstract class AbstractStorage
     abstract public function has($id);
     
     /**
-     * @param int $id ID элемента ифноблока
+     * @param int $id ID элемента
      * @return Result
      */
     abstract public function add($id);
     
     /**
-     * @param int $id ID элемента ифноблока
+     * @param int $id ID элемента
      * @return Result
      */
     abstract public function delete($id);
@@ -110,8 +110,10 @@ abstract class AbstractStorage
     abstract public function getAll();
     
     /**
-     * Очищает таблицу избранных элементов
+     * Удалаяет избранные элементы
+     * Если указан тип, удаляет только элементы текущего типа
+     * @param string $type Тип избранного
      * @return $this
      */
-    abstract public function clearAll();
+    abstract public function deleteAll($type = null);
 }

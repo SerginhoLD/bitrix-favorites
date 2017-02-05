@@ -138,9 +138,22 @@ class SessionStorage extends AbstractStorage
     /**
      * {@inheritdoc}
      */
-    public function clearAll()
+    public function deleteAll($type = null)
     {
         $key = FavoritesTable::getTableName();
+        
+        if (!is_null($type))
+        {
+            $type = trim($type);
+            
+            if (mb_strlen($type))
+            {
+                if (!empty($_SESSION[$key][$type]))
+                    unset($_SESSION[$key][$type]);
+            }
+            
+            return $this;
+        }
         
         if (!empty($_SESSION[$key]))
             unset($_SESSION[$key]);

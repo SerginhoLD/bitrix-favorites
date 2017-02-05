@@ -168,7 +168,7 @@ class DatabaseStorage extends AbstractStorage
     /**
      * {@inheritdoc}
      */
-    public function clearAll()
+    public function deleteAll($type = null)
     {
         $oConnection = Application::getInstance()->getConnection(FavoritesTable::getConnectionName());
         $oSqlHelper = $oConnection->getSqlHelper();
@@ -176,6 +176,11 @@ class DatabaseStorage extends AbstractStorage
         $table = FavoritesTable::getTableName();
         
         $sql = sprintf("DELETE FROM %s WHERE %s = %u", $oSqlHelper->quote($table), $oSqlHelper->quote('USER_ID'), $this->getUser());
+        
+        if (!is_null($type))
+        {
+            $sql .= sprintf(" AND %s = %s", $oSqlHelper->quote('ENTITY_TYPE'), $oSqlHelper->forSql($this->getType()));
+        }
         
         /** @var \Bitrix\Main\DB\Result $oDeleteResult */
         $oDeleteResult = $oConnection->query($sql);

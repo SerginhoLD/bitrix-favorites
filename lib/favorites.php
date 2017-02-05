@@ -138,7 +138,7 @@ class FavoritesTable extends Entity\DataManager
                     
                     if ($oConnection->getAffectedRowsCount() > 0)
                     {
-                        $oSessionStorage->clearAll();
+                        $oSessionStorage->deleteAll();
                     }
                 }
             }

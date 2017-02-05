@@ -79,7 +79,7 @@ class FavoritesTable extends Entity\DataManager
         if ($userID > 0)
             $oStorage = new Storage\DatabaseStorage($userID, $type);
         else
-            $oStorage = new Storage\SessionStorage(null, $type);
+            $oStorage = new Storage\LocalStorage(null, $type);
         
         return self::$oStorageForCurrentUser = $oStorage;
     }
@@ -95,7 +95,7 @@ class FavoritesTable extends Entity\DataManager
         {
             if ($arFields['USER_ID'] > 0)
             {
-                $oSessionStorage = new Storage\SessionStorage();
+                $oSessionStorage = new Storage\LocalStorage();
                 $arSessionFavorites = $oSessionStorage->getAll();
                 
                 self::$oStorageForCurrentUser = null;

@@ -7,10 +7,10 @@ use Bitrix\Main\Localization\Loc;
 use SerginhoLD\Favorites\FavoritesTable;
 
 /**
- * Class SessionStorage
+ * Class LocalStorage
  * @package SerginhoLD\Favorites\Storage
  */
-class SessionStorage extends AbstractStorage
+class LocalStorage extends AbstractStorage
 {
     /**
      * SessionStorage constructor.

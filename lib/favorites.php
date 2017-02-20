@@ -32,29 +32,28 @@ class FavoritesTable extends Entity\DataManager
      */
     public static function getMap()
     {
-        return array(
-            new Entity\IntegerField('ID', array(
+        return [
+            new Entity\IntegerField('ID', [
                 'primary' => true,
                 'autocomplete' => true,
-            )),
-            new Entity\IntegerField('USER_ID', array(
+            ]),
+            new Entity\IntegerField('USER_ID', [
                 'required' => true,
-            )),
-            new Entity\StringField('ENTITY_TYPE', array(
+            ]),
+            new Entity\StringField('ENTITY_TYPE', [
                 'required' => true,
                 'default_value' => self::TYPE_IBLOCK_ELEMENT,
-            )),
-            new Entity\IntegerField('ENTITY_ID', array(
+            ]),
+            new Entity\IntegerField('ENTITY_ID', [
                 'required' => true,
-            )),
-            
+            ]),
             new Entity\ReferenceField(
                 'USER',
                 UserTable::class,
                 ['=this.USER_ID' => 'ref.ID'],
                 ['join_type' => 'INNER']
             ),
-        );
+        ];
     }
     
     /**
@@ -95,12 +94,12 @@ class FavoritesTable extends Entity\DataManager
         {
             if ($arFields['USER_ID'] > 0)
             {
-                $oSessionStorage = new Storage\LocalStorage();
-                $arSessionFavorites = $oSessionStorage->getAll();
+                $oLocalStorage = new Storage\LocalStorage();
+                $arLocalFavorites = $oLocalStorage->getAll();
                 
                 self::$oStorageForCurrentUser = null;
                 
-                if (!empty($arSessionFavorites))
+                if (!empty($arLocalFavorites))
                 {
                     $oConnection = Application::getInstance()->getConnection(self::getConnectionName());
                     $oSqlHelper = $oConnection->getSqlHelper();
@@ -113,7 +112,7 @@ class FavoritesTable extends Entity\DataManager
                     $sDuplicateUpdate = $oSqlHelper->quote('ENTITY_ID');
                     $sDuplicateUpdate = $sDuplicateUpdate . '=' . $sDuplicateUpdate;
                     
-                    foreach ($arSessionFavorites as $type => $arItems)
+                    foreach ($arLocalFavorites as $type => $arItems)
                     {
                         foreach ($arItems as $itemID)
                         {
@@ -137,7 +136,7 @@ class FavoritesTable extends Entity\DataManager
                     $oInsertResult = $oConnection->query($sql);
                     
                     if ($oConnection->getAffectedRowsCount() > 0)
-                        $oSessionStorage->deleteAll();
+                        $oLocalStorage->deleteAll();
                 }
             }
         }

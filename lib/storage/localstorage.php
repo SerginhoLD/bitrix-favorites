@@ -1,8 +1,10 @@
 <?php
 namespace SerginhoLD\Favorites\Storage;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\Result;
 use Bitrix\Main\Error;
+use Bitrix\Main\Web\Cookie;
 use Bitrix\Main\Localization\Loc;
 use SerginhoLD\Favorites\FavoritesTable;
 
@@ -13,6 +15,16 @@ use SerginhoLD\Favorites\FavoritesTable;
 class LocalStorage extends AbstractStorage
 {
     /**
+     * @var array
+     */
+    private $arData = [];
+    
+    /**
+     * @var \Bitrix\Main\HttpRequest
+     */
+    protected $oRequest = null;
+    
+    /**
      * SessionStorage constructor.
      * @param null $userID
      * @param string $type
@@ -21,23 +33,71 @@ class LocalStorage extends AbstractStorage
     {
         parent::__construct($userID, $type);
         
-        if (session_status() === PHP_SESSION_NONE)
-            session_start();
+        $this->oRequest = Application::getInstance()->getContext()->getRequest();
     }
     
     /**
-     * Возвращает массив избранных элементов текущей сессии
+     * @return string
+     */
+    protected function getCookieName()
+    {
+        return FavoritesTable::getTableName();
+    }
+    
+    /**
+     * Возвращает массив всех избранных элементов
      * @return array
      */
-    protected function & getStorageList()
+    protected function & getData()
     {
-        $key = FavoritesTable::getTableName();
+        if (empty($this->arData))
+        {
+            $cookieValue = $this->oRequest->getCookie($this->getCookieName());
+            
+            if (!empty($cookieValue))
+            {
+                $arNewData = json_decode($cookieValue, true);
+                $this->arData = (json_last_error() === JSON_ERROR_NONE) ? (array)$arNewData : [];
+            }
+        }
+        
+        return $this->arData;
+    }
+    
+    /**
+     * Возвращает массив избранных элементов для текущего типа
+     * @return array
+     */
+    protected function & getItemsForCurrentType()
+    {
+        $arData = & $this->getData();
         $type = $this->getType();
         
-        if (!isset($_SESSION[$key][$type]) || !is_array($_SESSION[$key][$type]))
-            $_SESSION[$key][$type] = [];
+        if (!isset($arData[$type]))
+            $arData[$type] = [];
         
-        return $_SESSION[$key][$type];
+        return $arData[$type];
+    }
+    
+    /**
+     * Сохраняет массив всех избранных элементов
+     * @return $this
+     */
+    protected function save()
+    {
+        $oCookie = new Cookie($this->getCookieName(), json_encode($this->getData()));
+        
+        setcookie(
+            $oCookie->getName(),
+            $oCookie->getValue(),
+            $oCookie->getExpires(),
+            $oCookie->getPath(),
+            $oCookie->getDomain(),
+            $oCookie->getSecure(),
+            $oCookie->getHttpOnly()
+        );
+        
+        return $this;
     }
     
     /**
@@ -53,9 +113,9 @@ class LocalStorage extends AbstractStorage
         
         if ($oResult->isSuccess())
         {
-            $arStorage = $this->getStorageList();
+            $arItems = $this->getItemsForCurrentType();
             
-            if (!in_array($id, $arStorage, true))
+            if (!in_array($id, $arItems, true))
                 $oResult->addError(new Error(Loc::getMessage('FAVORITES_MODULE_STORAGE_ERROR_ITEM_NOT_IN_STORAGE')));
         }
         
@@ -77,8 +137,10 @@ class LocalStorage extends AbstractStorage
         }
         else
         {
-            $arStorage = & $this->getStorageList();
-            $arStorage[] = $id;
+            $arItems = & $this->getItemsForCurrentType();
+            $arItems[] = $id;
+            
+            $this->save();
         }
         
         return $oResult;
@@ -94,8 +156,10 @@ class LocalStorage extends AbstractStorage
         
         if ($oResult->isSuccess())
         {
-            $arStorage = & $this->getStorageList();
-            unset($arStorage[array_search($id, $arStorage, true)]);
+            $arItems = & $this->getItemsForCurrentType();
+            unset($arItems[array_search($id, $arItems, true)]);
+            
+            $this->save();
         }
         
         return $oResult;
@@ -106,17 +170,17 @@ class LocalStorage extends AbstractStorage
      */
     public function getList(array $arParams = [])
     {
-        $arStorage = $this->getStorageList();
+        $arItems = $this->getItemsForCurrentType();
         
         if (!empty($arParams))
         {
             $limit = isset($arParams['limit']) ? (int)$arParams['limit'] : null;
             $offset = isset($arParams['offset']) ? (int)$arParams['offset'] : null;
             
-            $arStorage = array_slice($arStorage, $offset, $limit);
+            $arItems = array_slice($arItems, $offset, $limit);
         }
         
-        return $arStorage;
+        return $arItems;
     }
     
     /**
@@ -124,15 +188,15 @@ class LocalStorage extends AbstractStorage
      */
     public function getAll()
     {
-        $arResult = (array)$_SESSION[FavoritesTable::getTableName()];
+        $arData = $this->getData();
         
-        foreach ($arResult as $k => $arItem)
+        foreach ($arData as $type => $arItems)
         {
-            if (!is_array($arItem) || empty($arItem))
-                unset($arResult[$k]);
+            if (!is_array($arItems) || empty($arItems))
+                unset($arData[$type]);
         }
         
-        return $arResult;
+        return $arData;
     }
     
     /**
@@ -140,24 +204,18 @@ class LocalStorage extends AbstractStorage
      */
     public function deleteAll($type = null)
     {
-        $key = FavoritesTable::getTableName();
+        $arData = & $this->getData();
         
         if (!is_null($type))
         {
-            $type = trim($type);
-            
-            if (mb_strlen($type))
-            {
-                if (!empty($_SESSION[$key][$type]))
-                    unset($_SESSION[$key][$type]);
-            }
-            
-            return $this;
+            if (isset($arData[$type]))
+                unset($arData[$type]);
+        }
+        else
+        {
+            $arData = [];
         }
         
-        if (!empty($_SESSION[$key]))
-            unset($_SESSION[$key]);
-        
-        return $this;
+        return $this->save();
     }
 }

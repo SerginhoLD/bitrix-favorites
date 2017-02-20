@@ -123,7 +123,7 @@ class FavoritesTable extends Entity\DataManager
                                 'ENTITY_ID' => $itemID,
                             ]);
                             
-                            if (empty($arInsertFields))
+                            if (empty($sInsertFields))
                                 $sInsertFields = $arInsert[0];
                             
                             $arInsertValues[] = '(' . $arInsert[1] . ')';
@@ -137,9 +137,7 @@ class FavoritesTable extends Entity\DataManager
                     $oInsertResult = $oConnection->query($sql);
                     
                     if ($oConnection->getAffectedRowsCount() > 0)
-                    {
                         $oSessionStorage->deleteAll();
-                    }
                 }
             }
         }

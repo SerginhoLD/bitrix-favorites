@@ -5,6 +5,7 @@ use Bitrix\Main\Application;
 use Bitrix\Main\Result;
 use Bitrix\Main\Error;
 use Bitrix\Main\HttpRequest as Request;
+use Bitrix\Main\Response;
 use Bitrix\Main\Web\Cookie;
 
 /**
@@ -14,10 +15,16 @@ use Bitrix\Main\Web\Cookie;
 class LocalStorage extends AbstractStorage implements LocalStorageInterface
 {
     /** @var Request */
-    protected $request = null;
+    protected $request;
+    
+    /** @var Response */
+    protected $response;
     
     /** @var array */
     private $arData = [];
+    
+    /** @var bool */
+    private $isGetFromCookie = false;
     
     /**
      * LocalStorage constructor.
@@ -26,6 +33,7 @@ class LocalStorage extends AbstractStorage implements LocalStorageInterface
     public function __construct($type = self::TYPE_IBLOCK_ELEMENT)
     {
         $this->request = Application::getInstance()->getContext()->getRequest();
+        $this->response = Application::getInstance()->getContext()->getResponse();
     }
     
     /**
@@ -42,8 +50,9 @@ class LocalStorage extends AbstractStorage implements LocalStorageInterface
      */
     protected function & _getData()
     {
-        if (empty($this->arData))
+        if (empty($this->arData) && !$this->isGetFromCookie)
         {
+            $this->isGetFromCookie = true;
             $cookieValue = $this->request->getCookie($this->_getCookieName());
             
             if (!empty($cookieValue))
@@ -77,7 +86,7 @@ class LocalStorage extends AbstractStorage implements LocalStorageInterface
      */
     protected function _save()
     {
-        $cookie = new Cookie($this->_getCookieName(), json_encode($this->_getData()));
+        $cookie = new Cookie($this->_getCookieName(), json_encode($this->arData));
         
         setcookie(
             $cookie->getName(),
@@ -89,6 +98,7 @@ class LocalStorage extends AbstractStorage implements LocalStorageInterface
             $cookie->getHttpOnly()
         );
         
+        $this->response->addCookie($cookie);
         return $this;
     }
     
@@ -174,9 +184,9 @@ class LocalStorage extends AbstractStorage implements LocalStorageInterface
      */
     public function flush()
     {
-        $arData = & $this->_getData();
-        unset($arData[$this->getType()]);
+        unset($this->arData[$this->getType()]);
         
+        $this->_save();
         return new Result();
     }
     
@@ -185,9 +195,8 @@ class LocalStorage extends AbstractStorage implements LocalStorageInterface
      */
     public function flushAll()
     {
-        $arData = & $this->_getData();
-        $arData = [];
-        
+        $this->arData = [];
+        $this->_save();
         return new Result();
     }
     

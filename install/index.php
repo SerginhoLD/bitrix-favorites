@@ -36,8 +36,8 @@ class serginhold_favorites extends \CModule
         $this->MODULE_NAME = Loc::getMessage('FAVORITES_MODULE_NAME');
         
         include __DIR__ . '/version.php';
-    
-        if (isset($arModuleVersion['VERSION'], $arModuleVersion['VERSION_DATE']))
+        
+        if (isset($arModuleVersion, $arModuleVersion['VERSION'], $arModuleVersion['VERSION_DATE']))
         {
             $this->MODULE_VERSION = $arModuleVersion['VERSION'];
             $this->MODULE_VERSION_DATE = $arModuleVersion['VERSION_DATE'];

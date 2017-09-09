@@ -2,7 +2,6 @@
 namespace SerginhoLD\Favorites;
 
 use Bitrix\Main\Result;
-use Bitrix\Main\Entity\DataManager;
 
 /**
  * Interface DatabaseStorageInterface
@@ -24,10 +23,4 @@ interface LocalStorageInterface extends StorageInterface
      * @return Result
      */
     public function flushAll();
-    
-    /**
-     * @param DataManager|string $dataManager
-     * @return resource
-     */
-    //public function saveToDataManager($dataManager);
 }

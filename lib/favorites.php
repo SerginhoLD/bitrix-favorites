@@ -5,7 +5,6 @@ use Bitrix\Main\Application;
 use Bitrix\Main\Entity;
 use Bitrix\Main\UserTable;
 use Bitrix\Main\ArgumentNullException;
-//use SerginhoLD\Favorites\Storage;
 
 /**
  * Class FavoritesTable
@@ -74,7 +73,7 @@ class FavoritesTable extends Entity\DataManager
      * @return bool
      * @throws ArgumentNullException
      */
-    public static function insertFromLocalStorage($userId)
+    protected static function insertFromLocalStorage($userId)
     {
         $userId = (int)$userId;
         

@@ -2,6 +2,7 @@
 defined('B_PROLOG_INCLUDED') and (B_PROLOG_INCLUDED === true) or die();
 
 use Bitrix\Main\Localization\Loc;
+use SerginhoLD\Favorites\Components\ButtonComponent;
 
 /**
  * @global \CMain $APPLICATION
@@ -14,7 +15,7 @@ use Bitrix\Main\Localization\Loc;
  * @var string $templateFile
  * @var string $templateFolder
  * @var string $componentPath
- * @var FavoritesButton $component
+ * @var ButtonComponent $component
  */
 
 Loc::loadMessages(__FILE__);

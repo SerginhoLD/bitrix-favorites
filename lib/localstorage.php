@@ -6,7 +6,6 @@ use Bitrix\Main\Result;
 use Bitrix\Main\Error;
 use Bitrix\Main\HttpRequest as Request;
 use Bitrix\Main\Web\Cookie;
-use Bitrix\Main\Localization\Loc;
 
 /**
  * Class LocalStorage

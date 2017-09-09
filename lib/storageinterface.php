@@ -2,7 +2,6 @@
 namespace SerginhoLD\Favorites;
 
 use Bitrix\Main\Result;
-use SerginhoLD\Favorites\FavoritesTable;
 
 /**
  * Interface StorageInterface

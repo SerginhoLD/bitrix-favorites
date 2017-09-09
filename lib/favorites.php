@@ -4,7 +4,8 @@ namespace SerginhoLD\Favorites;
 use Bitrix\Main\Application;
 use Bitrix\Main\Entity;
 use Bitrix\Main\UserTable;
-use SerginhoLD\Favorites\Storage;
+use Bitrix\Main\ArgumentNullException;
+//use SerginhoLD\Favorites\Storage;
 
 /**
  * Class FavoritesTable
@@ -13,11 +14,6 @@ use SerginhoLD\Favorites\Storage;
 class FavoritesTable extends Entity\DataManager
 {
     const TYPE_IBLOCK_ELEMENT = 'IBLOCK_ELEMENT';
-    
-    /**
-     * @var Storage\AbstractStorage
-     */
-    private static $oStorageForCurrentUser = null;
     
     /**
      * @return string
@@ -33,54 +29,27 @@ class FavoritesTable extends Entity\DataManager
     public static function getMap()
     {
         return [
-            new Entity\IntegerField('ID', [
+            'ID' => new Entity\IntegerField('ID', [
                 'primary' => true,
                 'autocomplete' => true,
             ]),
-            new Entity\IntegerField('USER_ID', [
+            'USER_ID' => new Entity\IntegerField('USER_ID', [
                 'required' => true,
             ]),
-            new Entity\StringField('ENTITY_TYPE', [
+            'ENTITY_TYPE' => new Entity\StringField('ENTITY_TYPE', [
                 'required' => true,
                 'default_value' => self::TYPE_IBLOCK_ELEMENT,
             ]),
-            new Entity\IntegerField('ENTITY_ID', [
+            'ENTITY_ID' => new Entity\IntegerField('ENTITY_ID', [
                 'required' => true,
             ]),
-            new Entity\ReferenceField(
+            'USER' => new Entity\ReferenceField(
                 'USER',
                 UserTable::class,
                 ['=this.USER_ID' => 'ref.ID'],
                 ['join_type' => 'INNER']
             ),
         ];
-    }
-    
-    /**
-     * Возвращает контейнер избранных элементов для текущего пользователя
-     * @param string $type
-     * @return Storage\AbstractStorage
-     */
-    public static function getStorageForCurrentUser($type = self::TYPE_IBLOCK_ELEMENT)
-    {
-        if (self::$oStorageForCurrentUser instanceof Storage\AbstractStorage)
-            return self::$oStorageForCurrentUser;
-        
-        /** @global \CUser $USER */
-        global $USER;
-        
-        $oStorage = null;
-        $userID = null;
-        
-        if (!empty($USER) && ($USER instanceof \CUser) && $USER->IsAuthorized())
-            $userID = (int)$USER->GetID();
-        
-        if ($userID > 0)
-            $oStorage = new Storage\DatabaseStorage($userID, $type);
-        else
-            $oStorage = new Storage\LocalStorage(null, $type);
-        
-        return self::$oStorageForCurrentUser = $oStorage;
     }
     
     /**
@@ -94,52 +63,73 @@ class FavoritesTable extends Entity\DataManager
         {
             if ($arFields['USER_ID'] > 0)
             {
-                $oLocalStorage = new Storage\LocalStorage();
-                $arLocalFavorites = $oLocalStorage->getAll();
-                
-                self::$oStorageForCurrentUser = null;
-                
-                if (!empty($arLocalFavorites))
-                {
-                    $oConnection = Application::getInstance()->getConnection(self::getConnectionName());
-                    $oSqlHelper = $oConnection->getSqlHelper();
-                    
-                    $table = self::getTableName();
-                    
-                    $sInsertFields = null;
-                    $arInsertValues = [];
-                    
-                    $sDuplicateUpdate = $oSqlHelper->quote('ENTITY_ID');
-                    $sDuplicateUpdate = $sDuplicateUpdate . '=' . $sDuplicateUpdate;
-                    
-                    foreach ($arLocalFavorites as $type => $arItems)
-                    {
-                        foreach ($arItems as $itemID)
-                        {
-                            $arInsert = $oSqlHelper->prepareInsert($table, [
-                                'USER_ID' => $arFields['USER_ID'],
-                                'ENTITY_TYPE' => $type,
-                                'ENTITY_ID' => $itemID,
-                            ]);
-                            
-                            if (empty($sInsertFields))
-                                $sInsertFields = $arInsert[0];
-                            
-                            $arInsertValues[] = '(' . $arInsert[1] . ')';
-                        }
-                    }
-                    
-                    $sql = sprintf("INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %s",
-                        $oSqlHelper->quote($table), $sInsertFields, implode(',', $arInsertValues), $sDuplicateUpdate);
-                    
-                    /** @var \Bitrix\Main\DB\Result $oInsertResult */
-                    $oInsertResult = $oConnection->query($sql);
-                    
-                    if ($oConnection->getAffectedRowsCount() > 0)
-                        $oLocalStorage->deleteAll();
-                }
+                static::insertFromLocalStorage($arFields['USER_ID']);
             }
         }
         catch (\Exception $e) {}
+    }
+    
+    /**
+     * @param int $userId
+     * @return bool
+     * @throws ArgumentNullException
+     */
+    public static function insertFromLocalStorage($userId)
+    {
+        $userId = (int)$userId;
+        
+        if ($userId < 1)
+        {
+            throw new ArgumentNullException('userId');
+        }
+        
+        $localStorage = new LocalStorage();
+        $arFavorites = $localStorage->getAllItems();
+        
+        if (!empty($arFavorites))
+        {
+            $connection = Application::getInstance()->getConnection(static::getConnectionName());
+            $helper = $connection->getSqlHelper();
+            $table = static::getTableName();
+            
+            $sInsertFields = null;
+            $arInsertValues = [];
+            
+            $sDuplicateUpdate = $helper->quote('ENTITY_ID');
+            $sDuplicateUpdate = $sDuplicateUpdate . '=' . $sDuplicateUpdate;
+            
+            foreach ($arFavorites as $type => $arItems)
+            {
+                foreach ($arItems as $itemId)
+                {
+                    $arInsert = $helper->prepareInsert($table, [
+                        'USER_ID' => $userId,
+                        'ENTITY_TYPE' => $type,
+                        'ENTITY_ID' => $itemId,
+                    ]);
+                    
+                    if (empty($sInsertFields))
+                        $sInsertFields = $arInsert[0];
+                    
+                    $arInsertValues[] = '(' . $arInsert[1] . ')';
+                }
+            }
+            
+            $sql = sprintf("INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %s",
+                $helper->quote($table), $sInsertFields, implode(',', $arInsertValues), $sDuplicateUpdate
+            );
+            
+            /** @var \Bitrix\Main\DB\Result $oInsertResult */
+            $oInsertResult = $connection->query($sql);
+            
+            if ($connection->getAffectedRowsCount() < 1)
+            {
+                return false;
+            }
+            
+            $localStorage->flushAll();
+        }
+        
+        return true;
     }
 }

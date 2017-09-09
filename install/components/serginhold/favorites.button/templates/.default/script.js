@@ -33,12 +33,12 @@
                     $btn.removeClass('btn-default').addClass('btn-success').text(titleDelete);
                 else
                     $btn.removeClass('btn-success').addClass('btn-default').text(titleAdd);
-                
-                $btn.prop('disabled', false);
             }
             else {
                 console.log(result.errors);
             }
+            
+            $btn.prop('disabled', false);
             
         }).error(function (jqXHR, textStatus, errorThrown) {
             console.log(textStatus, errorThrown);

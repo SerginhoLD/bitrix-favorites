@@ -1,25 +1,35 @@
 <?php
-defined('B_PROLOG_INCLUDED') and (B_PROLOG_INCLUDED === true) or die();
+namespace SerginhoLD\Favorites\Components;
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Result;
 use Bitrix\Main\Error;
 use Bitrix\Main\Localization\Loc;
-use SerginhoLD\Favorites\FavoritesTable;
-use SerginhoLD\Favorites\Storage\AbstractStorage;
-
-Loc::loadMessages(__FILE__);
+use SerginhoLD\Favorites;
 
 /**
- * Class FavoritesButton
+ * Class ButtonComponent
+ * @package SerginhoLD\Favorites\Components
  */
-class FavoritesButton extends \CBitrixComponent
+class ButtonComponent extends \CBitrixComponent
 {
     const ACTION_ADD = 'add';
     const ACTION_DELETE = 'delete';
     
-    /** @var AbstractStorage */
-    private $oStorage = null;
+    /** @var Favorites\StorageInterface */
+    protected $storage = null;
+    
+    /** @var string */
+    protected $type;
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function __construct($component = null)
+    {
+        parent::__construct($component);
+        Loc::loadMessages(__FILE__);
+    }
     
     /**
      * @param $arParams
@@ -66,19 +76,20 @@ class FavoritesButton extends \CBitrixComponent
             }
             
             /** Тип избранного */
-            $arParams['ENTITY_TYPE'] = isset($arParams['ENTITY_TYPE'])
-                ? trim($arParams['ENTITY_TYPE'])
-                : FavoritesTable::TYPE_IBLOCK_ELEMENT;
+            $arParams['ENTITY_TYPE'] = trim($arParams['ENTITY_TYPE']);
             
-            if (!mb_strlen($arParams['ENTITY_TYPE']))
-                $arParams['ENTITY_TYPE'] = FavoritesTable::TYPE_IBLOCK_ELEMENT;
+            $arParams['ENTITY_TYPE'] = !empty($arParams['ENTITY_TYPE'])
+                ? $arParams['ENTITY_TYPE']
+                : Favorites\StorageInterface::TYPE_IBLOCK_ELEMENT;
+            
+            $this->type = & $arParams['ENTITY_TYPE'];
             
             $arResult['AJAX_URL'] = $this->getPath() . '/ajax.php';
             $arParams['SHOW_ERRORS'] = (isset($arParams['SHOW_ERRORS']) && $arParams['SHOW_ERRORS'] === 'Y') ? 'Y' : 'N';
             
-            $this->oStorage = FavoritesTable::getStorageForCurrentUser();
+            $this->storage = Favorites\Factory::getStorageForCurrentUser($this->type);
         }
-        catch (Exception $e)
+        catch (\Exception $e)
         {
             $arResult['ERRORS'][] = $e->getMessage();
         }
@@ -94,19 +105,26 @@ class FavoritesButton extends \CBitrixComponent
         $arParams = & $this->arParams;
         $arResult = & $this->arResult;
         
-        $oRequest = $this->request;
+        $request = $this->request;
         
-        if (!empty($arParams['ACTION']) && $oRequest->isAjaxRequest() && $oRequest->isPost())
+        if (!empty($arParams['ACTION']) && $request->isAjaxRequest() && $request->isPost())
         {
             $this->executeAjaxAction();
         }
         
         if (empty($arResult['ERRORS']))
         {
-            $oStorage = $this->oStorage;
-            
-            $arResult['USER_ID'] = $oStorage->getUser();
-            $arResult['ACTIVE'] = $oStorage->has($arParams['ENTITY_ID'])->isSuccess();
+            try
+            {
+                $storage = $this->storage;
+                
+                $arResult['USER_ID'] = $storage->getUserId();
+                $arResult['ACTIVE'] = $storage->has($arParams['ENTITY_ID']);
+            }
+            catch (\Exception $e)
+            {
+                $arResult['ERRORS'][] = $e->getMessage();
+            }
         }
         
         $this->includeComponentTemplate();
@@ -120,33 +138,41 @@ class FavoritesButton extends \CBitrixComponent
         $arParams = & $this->arParams;
         $arResult = & $this->arResult;
         
-        $oActionResult = new Result();
+        $result = new Result();
         
         if (empty($arResult['ERRORS']))
         {
-            $oStorage = $this->oStorage;
-            
-            switch ($arParams['ACTION'])
+            try
             {
-                /** Добавляем в избранное */
-                case self::ACTION_ADD:
-                    $oActionResult = $oStorage->add($arParams['ENTITY_ID']);
-                    break;
+                $storage = $this->storage;
                 
-                /** Удаляем из избранного */
-                case self::ACTION_DELETE:
-                    $oActionResult = $oStorage->delete($arParams['ENTITY_ID']);
-                    break;
-                
-                default:
-                    $oActionResult->addError(new Error(Loc::getMessage('FBC_ERROR_ACTION')));
+                switch ($arParams['ACTION'])
+                {
+                    /** Добавляем в избранное */
+                    case self::ACTION_ADD:
+                        $result = $storage->add($arParams['ENTITY_ID']);
+                        break;
+                    
+                    /** Удаляем из избранного */
+                    case self::ACTION_DELETE:
+                        $result = $storage->delete($arParams['ENTITY_ID']);
+                        break;
+                    
+                    default:
+                        $result->addError(new Error(Loc::getMessage('FBC_ERROR_ACTION')));
+                }
+            }
+            catch (\Exception $e)
+            {
+                $result->addError(new Error($e->getMessage()));
             }
         }
         
-        $arResult['ERRORS'] = array_merge((array)$arResult['ERRORS'], $oActionResult->getErrorMessages());
+        $arResult['ERRORS'] = array_merge((array)$arResult['ERRORS'], $result->getErrorMessages());
         
         exit(json_encode([
             'action' => $arParams['ACTION'],
+            'entity_id' => $arParams['ENTITY_ID'],
             'success' => empty($arResult['ERRORS']),
             'errors' => $arResult['ERRORS'],
         ]));

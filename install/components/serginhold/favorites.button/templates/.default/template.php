@@ -21,7 +21,7 @@ Loc::loadMessages(__FILE__);
 
 \CJSCore::Init(['jquery']);
 ?>
-<button class="btn btn-xs js-add-to-favorites <?= $arResult['ACTIVE'] ? 'btn-success' : 'btn-default' ?>"
+<a href="" class="btn btn-xs js-add-to-favorites <?= $arResult['ACTIVE'] ? 'btn-success' : 'btn-default' ?>"
         data-id="<?= $arParams['ENTITY_ID'] ?>"
         data-type="<?= htmlspecialchars($arParams['ENTITY_TYPE']) ?>"
         data-url="<?= htmlspecialchars($arResult['AJAX_URL']) ?>"
@@ -30,4 +30,4 @@ Loc::loadMessages(__FILE__);
         data-title-add="<?= htmlspecialchars(Loc::getMessage('FBT_ADD')) ?>"
         data-title-delete="<?= htmlspecialchars(Loc::getMessage('FBT_DELETE')) ?>">
     <?= htmlspecialchars($arResult['ACTIVE'] ? Loc::getMessage('FBT_DELETE') : Loc::getMessage('FBT_ADD')) ?>
-</button>
+</a>

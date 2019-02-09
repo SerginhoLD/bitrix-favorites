@@ -157,8 +157,8 @@ class serginhold_favorites extends \CModule
     {
         $oEventManager = EventManager::getInstance();
         
-        $oEventManager->registerEventHandler('main', 'OnAfterUserLogin',
-            $this->MODULE_ID, FavoritesTable::class, 'OnAfterUserLoginEvent');
+        $oEventManager->registerEventHandler('main', 'OnAfterUserAuthorize',
+            $this->MODULE_ID, FavoritesTable::class, 'OnAfterUserAuthorize');
     }
     
     /**
@@ -168,8 +168,8 @@ class serginhold_favorites extends \CModule
     {
         $oEventManager = EventManager::getInstance();
         
-        $oEventManager->unRegisterEventHandler('main', 'OnAfterUserLogin',
-            $this->MODULE_ID, FavoritesTable::class, 'OnAfterUserLoginEvent');
+        $oEventManager->unRegisterEventHandler('main', 'OnAfterUserAuthorize',
+            $this->MODULE_ID, FavoritesTable::class, 'OnAfterUserAuthorize');
     }
 }
 

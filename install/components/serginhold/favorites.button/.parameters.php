@@ -18,7 +18,7 @@ $arComponentParameters = [
             'PARENT' => 'BASE',
             'NAME' => Loc::getMessage('FBP_ENTITY_TYPE'),
             'TYPE' => 'STRING',
-            'DEFAULT' => FavoritesTable::ENTITY_TYPE_IBLOCK_ELEMENT,
+            'DEFAULT' => FavoritesTable::TYPE_IBLOCK_ELEMENT,
         ],
         'ENTITY_ID' => [
             'PARENT' => 'BASE',

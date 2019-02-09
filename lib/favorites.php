@@ -56,13 +56,15 @@ class FavoritesTable extends Entity\DataManager
      * Проверяем есть ли в сессии избранные элементы и переносим их в базу данных
      * @param $arFields
      */
-    public static function OnAfterUserLoginEvent(& $arFields)
+    public static function OnAfterUserAuthorize(& $arFields)
     {
         try
         {
-            if ($arFields['USER_ID'] > 0)
+            $userId = (int)$arFields['user_fields']['ID'];
+
+            if ($userId > 0)
             {
-                static::insertFromLocalStorage($arFields['USER_ID']);
+                static::insertFromLocalStorage($userId);
             }
         }
         catch (\Exception $e) {}

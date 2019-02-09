@@ -7,7 +7,7 @@ use Bitrix\Main\Result;
  * Interface StorageInterface
  * @package SerginhoLD\Favorites\Storage
  */
-interface StorageInterface
+interface StorageInterface extends \Countable
 {
     const TYPE_IBLOCK_ELEMENT = FavoritesTable::TYPE_IBLOCK_ELEMENT;
     

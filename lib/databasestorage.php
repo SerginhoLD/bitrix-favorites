@@ -199,4 +199,17 @@ class DatabaseStorage extends AbstractStorage implements DatabaseStorageInterfac
         
         return $result;
     }
+
+    /**
+     * @return int
+     */
+    public function count()
+    {
+        $table = $this->getDataManager();
+
+        return (int)$table::getCount([
+            '=USER_ID' => $this->getUserId(),
+            '=ENTITY_TYPE' => $this->getType(),
+        ]);
+    }
 }

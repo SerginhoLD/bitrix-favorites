@@ -32,6 +32,7 @@ class LocalStorage extends AbstractStorage implements LocalStorageInterface
      */
     public function __construct($type = self::TYPE_IBLOCK_ELEMENT)
     {
+        $this->_setType($type);
         $this->request = Application::getInstance()->getContext()->getRequest();
         $this->response = Application::getInstance()->getContext()->getResponse();
     }
@@ -222,5 +223,14 @@ class LocalStorage extends AbstractStorage implements LocalStorageInterface
         }
         
         return $arData;
+    }
+
+    /**
+     * @return int
+     */
+    public function count()
+    {
+        $arItems = $this->_getItemsForCurrentType();
+        return count($arItems);
     }
 }

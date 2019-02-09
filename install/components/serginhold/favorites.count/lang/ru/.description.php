@@ -2,6 +2,6 @@
 defined('B_PROLOG_INCLUDED') and (B_PROLOG_INCLUDED === true) or die();
 
 $MESS = array_merge(!empty($MESS) ? $MESS : [], [
-    'FBP_ENTITY_TYPE' => 'Item type',
-    'FBP_ENTITY_ID' => 'Item ID',
+    'FAVORITES_MODULE_NAME' => 'Избранное',
+    'FAVORITES_COUNT_NAME' => 'Кол-во',
 ]);

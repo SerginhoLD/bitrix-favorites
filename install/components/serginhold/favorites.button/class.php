@@ -120,6 +120,9 @@ class ButtonComponent extends \CBitrixComponent
                 
                 $arResult['USER_ID'] = $storage->getUserId();
                 $arResult['ACTIVE'] = $storage->has($arParams['ENTITY_ID']);
+
+                if ($arParams['GET_COUNT'] === 'Y')
+                    $arResult['COUNT'] = $storage->count();
             }
             catch (\Exception $e)
             {
@@ -139,13 +142,14 @@ class ButtonComponent extends \CBitrixComponent
         $arResult = & $this->arResult;
         
         $result = new Result();
+        $count = null;
         
         if (empty($arResult['ERRORS']))
         {
             try
             {
                 $storage = $this->storage;
-                
+
                 switch ($arParams['ACTION'])
                 {
                     /** Добавляем в избранное */
@@ -161,6 +165,9 @@ class ButtonComponent extends \CBitrixComponent
                     default:
                         $result->addError(new Error(Loc::getMessage('FBC_ERROR_ACTION')));
                 }
+
+                if ($arParams['GET_COUNT'])
+                    $count = $storage->count();
             }
             catch (\Exception $e)
             {
@@ -173,6 +180,7 @@ class ButtonComponent extends \CBitrixComponent
         exit(json_encode([
             'action' => $arParams['ACTION'],
             'entity_id' => $arParams['ENTITY_ID'],
+            'count' => $count,
             'success' => empty($arResult['ERRORS']),
             'errors' => $arResult['ERRORS'],
         ]));

@@ -29,10 +29,26 @@
             
         }).done(function(result) {
             if (result.success) {
-                if (result.action === actionAdd)
-                    $btn.removeClass('btn-default').addClass('btn-success').text(titleDelete);
-                else
-                    $btn.removeClass('btn-success').addClass('btn-default').text(titleAdd);
+                $('.js-add-to-favorites')
+                    .filter(function() {
+                        return $(this).data('type') === type && $(this).data('id') === id;
+                    })
+                    .each(function() {
+                        if (result.action === actionAdd)
+                            $(this).removeClass('btn-default').addClass('btn-success').text(titleDelete);
+                        else
+                            $(this).removeClass('btn-success').addClass('btn-default').text(titleAdd);
+                    });
+                
+                if (result.count !== null) {
+                    var $count = $('.js-sld-favorites-count[data-type="'+type+'"]');
+                    
+                    if ($count.length) {
+                        $count.each(function() {
+                            $(this).text(result.count);
+                        });
+                    }
+                }
             }
             else {
                 console.log(result.errors);

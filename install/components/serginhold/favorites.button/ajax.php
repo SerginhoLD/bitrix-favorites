@@ -50,6 +50,7 @@ $component = new \SerginhoLD\Favorites\Components\ButtonComponent();
 $component->arParams = $component->onPrepareComponentParams([
     'ENTITY_ID' => $elementId,
     'ENTITY_TYPE' => (string)$_POST['ENTITY_TYPE'],
+    'GET_COUNT' => 'Y',
     'ACTION' => (string)$_POST['ACTION'],
 ]);
 

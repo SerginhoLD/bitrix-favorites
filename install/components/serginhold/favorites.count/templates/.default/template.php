@@ -20,4 +20,7 @@ use SerginhoLD\Favorites\Components\CountComponent;
 
 Loc::loadMessages(__FILE__);
 ?>
-<a href="<?= $arParams['LINK'] ?>"><?= Loc::getMessage('FCT_TITLE') ?>: <?= $arResult['COUNT'] ?></a>
+<a href="<?= $arParams['LINK'] ?>">
+    <?= Loc::getMessage('FCT_TITLE') ?>:
+    <span class="js-sld-favorites-count" data-type="<?= $arParams['ENTITY_TYPE'] ?>"><?= $arResult['COUNT'] ?></span>
+</a>

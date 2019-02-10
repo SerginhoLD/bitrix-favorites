@@ -26,5 +26,11 @@ $arComponentParameters = [
             'TYPE' => 'STRING',
             'DEFAULT' => '',
         ],
+        'GET_COUNT' => [
+            'PARENT' => 'BASE',
+            'NAME' => Loc::getMessage('FBP_GET_COUNT'),
+            'TYPE' => 'CHECKBOX',
+            'DEFAULT' => 'N',
+        ],
     ],
 ];

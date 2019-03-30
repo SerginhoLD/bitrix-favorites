@@ -6,6 +6,8 @@ define('DisableEventsCheck', true);
 
 $elementId = null;
 $arErrors = [];
+$action = isset($_POST['ACTION']) ? (string)$_POST['ACTION'] : null;
+$entityType = isset($_POST['ENTITY_TYPE']) ? (string)$_POST['ENTITY_TYPE'] : null;
 
 if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
 {
@@ -19,7 +21,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
                 $arErrors[] = 'Not specified item ID';
         }
         
-        if (empty($_POST['ACTION']))
+        if (empty($action))
             $arErrors[] = 'Unknown action';
     }
     else
@@ -35,7 +37,7 @@ else
 if (!empty($arErrors))
 {
     exit(json_encode([
-        'action' => $_POST['ACTION'],
+        'action' => $action,
         'success' => false,
         'entity_id' => $elementId,
         'errors' => $arErrors,
@@ -49,9 +51,9 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_be
 $component = new \SerginhoLD\Favorites\Components\ButtonComponent();
 $component->arParams = $component->onPrepareComponentParams([
     'ENTITY_ID' => $elementId,
-    'ENTITY_TYPE' => (string)$_POST['ENTITY_TYPE'],
+    'ENTITY_TYPE' => $entityType,
     'GET_COUNT' => 'Y',
-    'ACTION' => (string)$_POST['ACTION'],
+    'ACTION' => $action,
 ]);
 
 $component->executeComponent();
